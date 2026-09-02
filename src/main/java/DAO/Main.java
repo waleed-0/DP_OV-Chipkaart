@@ -13,7 +13,7 @@ public class Main {
 
     private static final String Url = "jdbc:postgresql://localhost:5432/ovchip";
     private static final String User = "postgres";
-    private static final String Password = "135795";
+    private static final String Password = "0000";
 
     public static void main(String[] args) throws SQLException {
 

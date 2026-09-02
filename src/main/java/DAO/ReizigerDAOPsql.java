@@ -19,7 +19,7 @@ public class ReizigerDAOPsql implements ReizigerDAO {
 
     @Override
     public boolean save(Reiziger reiziger) {
-        String query = "INSERT INTO reiziger (id, voorletters, tussenvoegsel, achternaam, geboortedatum) " +
+        String query = "INSERT INTO reiziger (reiziger_id, voorletters, tussenvoegsel, achternaam, geboortedatum) " +
                 "VALUES (?, ?, ?, ?, ?)";
 
         try (PreparedStatement statement = conn.prepareStatement(query)) {
@@ -44,7 +44,7 @@ public class ReizigerDAOPsql implements ReizigerDAO {
     public boolean update(Reiziger reiziger) {
         String query = "UPDATE reiziger " +
                 "SET voorletters = ?, tussenvoegsel = ?, achternaam = ?, geboortedatum = ? " +
-                "WHERE id = ?";
+                "WHERE reiziger_id = ?";
 
         try (PreparedStatement statement = conn.prepareStatement(query)) {
 
@@ -66,7 +66,7 @@ public class ReizigerDAOPsql implements ReizigerDAO {
 
     @Override
     public boolean delete(Reiziger reiziger) {
-        String query = "DELETE FROM reiziger WHERE id = ?";
+        String query = "DELETE FROM reiziger WHERE reiziger_id = ?";
 
         try (PreparedStatement statement = conn.prepareStatement(query)) {
 
@@ -84,8 +84,8 @@ public class ReizigerDAOPsql implements ReizigerDAO {
 
     @Override
     public Reiziger findById(int id) {
-        String query = "SELECT id, voorletters, tussenvoegsel, achternaam, geboortedatum " +
-                "FROM reiziger WHERE id = ?";
+        String query = "SELECT reiziger_id, voorletters, tussenvoegsel, achternaam, geboortedatum " +
+                "FROM reiziger WHERE reiziger_id = ?";
 
         try (PreparedStatement statement = conn.prepareStatement(query)) {
 
@@ -95,7 +95,7 @@ public class ReizigerDAOPsql implements ReizigerDAO {
 
                 if (resultSet.next()) {
 
-                    int reizigerId = resultSet.getInt("id");
+                    int reizigerId = resultSet.getInt("reiziger_id");
                     String voorletters = resultSet.getString("voorletters");
                     String tussenvoegsel = resultSet.getString("tussenvoegsel");
                     String achternaam = resultSet.getString("achternaam");
@@ -123,7 +123,7 @@ public class ReizigerDAOPsql implements ReizigerDAO {
 
         List<Reiziger> reizigers = new ArrayList<>();
 
-        String query = "SELECT id, voorletters, tussenvoegsel, achternaam, geboortedatum " +
+        String query = "SELECT reiziger_id, voorletters, tussenvoegsel, achternaam, geboortedatum " +
                 "FROM reiziger WHERE geboortedatum = ?";
 
         try (PreparedStatement statement = conn.prepareStatement(query)) {
@@ -134,7 +134,7 @@ public class ReizigerDAOPsql implements ReizigerDAO {
 
                 while (resultSet.next()) {
 
-                    int reizigerId = resultSet.getInt("id");
+                    int reizigerId = resultSet.getInt("reiziger_id");
                     String voorletters = resultSet.getString("voorletters");
                     String tussenvoegsel = resultSet.getString("tussenvoegsel");
                     String achternaam = resultSet.getString("achternaam");
@@ -164,7 +164,7 @@ public class ReizigerDAOPsql implements ReizigerDAO {
 
         List<Reiziger> reizigers = new ArrayList<>();
 
-        String query = "SELECT id, voorletters, tussenvoegsel, achternaam, geboortedatum " +
+        String query = "SELECT reiziger_id, voorletters, tussenvoegsel, achternaam, geboortedatum " +
                 "FROM reiziger";
 
         try (PreparedStatement statement = conn.prepareStatement(query);
@@ -172,7 +172,7 @@ public class ReizigerDAOPsql implements ReizigerDAO {
 
             while (resultSet.next()) {
 
-                int reizigerId = resultSet.getInt("id");
+                int reizigerId = resultSet.getInt("reiziger_id");
                 String voorletters = resultSet.getString("voorletters");
                 String tussenvoegsel = resultSet.getString("tussenvoegsel");
                 String achternaam = resultSet.getString("achternaam");
