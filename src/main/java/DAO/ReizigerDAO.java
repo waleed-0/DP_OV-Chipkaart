@@ -1,6 +1,6 @@
 package DAO;
 
-import main.java.POJO.Reiziger;
+import POJO.Reiziger;
 
 import java.util.List;
 
