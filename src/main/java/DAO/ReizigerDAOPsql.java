@@ -1,4 +1,4 @@
-package DAO;
+package main.java.DAO;
 
 import POJO.Reiziger;
 
@@ -9,7 +9,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ReizigerDAOPsql implements ReizigerDAO {
+public class ReizigerDAOPsql implements DAO.ReizigerDAO {
 
     private Connection conn;
 
@@ -106,7 +106,7 @@ public class ReizigerDAOPsql implements ReizigerDAO {
                             voorletters,
                             tussenvoegsel,
                             achternaam,
-                            geboortedatum.toLocalDate()
+                            geboortedatum
                     );
                 }
             }
@@ -146,7 +146,7 @@ public class ReizigerDAOPsql implements ReizigerDAO {
                                     voorletters,
                                     tussenvoegsel,
                                     achternaam,
-                                    geboortedatum.toLocalDate()
+                                    geboortedatum
                             )
                     );
                 }
@@ -184,7 +184,7 @@ public class ReizigerDAOPsql implements ReizigerDAO {
                                 voorletters,
                                 tussenvoegsel,
                                 achternaam,
-                                geboortedatum.toLocalDate()
+                                geboortedatum
                         )
                 );
             }

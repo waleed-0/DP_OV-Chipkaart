@@ -1,70 +1,23 @@
-package DAO;
+package main.java.DAO;
 
-import DAO.ReizigerDAOPsql;
 import POJO.Reiziger;
 
-import java.sql.Connection;
 import java.sql.Date;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 
 public class Main {
 
-    private static final String Url = "jdbc:postgresql://localhost:5432/ovchip";
-    private static final String User = "postgres";
-    private static final String Password = "0000";
-
     public static void main(String[] args) throws SQLException {
 
-        Connection connection = getConnection();
+        ReizigerDAOHibernate rdao = new ReizigerDAOHibernate();
 
-        if (connection != null) {
+        testReizigerDAO(rdao);
 
-            testReizigerDAO((ReizigerDAO) new ReizigerDAOPsql(connection));
-
-            closeConnection(connection);
-
-        } else {
-
-            System.out.println("Er is een fout opgetreden tijdens het maken van de databaseverbinding.");
-        }
+        rdao.close();
     }
 
-    private static Connection getConnection() {
-
-        Connection connection = null;
-
-        try {
-
-            connection = DriverManager.getConnection(Url, User, Password);
-            System.out.println("Databaseverbinding is ok");
-
-        } catch (SQLException e) {
-
-            e.printStackTrace();
-        }
-
-        return connection;
-    }
-
-    private static void closeConnection(Connection connection) {
-
-        if (connection != null) {
-
-            try {
-
-                connection.close();
-                System.out.println("Databaseverbinding gesloten.");
-
-            } catch (SQLException e) {
-
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private static void testReizigerDAO(ReizigerDAO rdao) throws SQLException {
+    private static void testReizigerDAO(ReizigerDAOHibernate rdao) throws SQLException {
 
         System.out.println("\n---------- Test ReizigerDAO -------------");
 
@@ -87,7 +40,7 @@ public class Main {
                 "S",
                 "",
                 "Boers",
-                java.sql.Date.valueOf(gbdatum).toLocalDate()
+                Date.valueOf(gbdatum)
         );
 
         System.out.print(

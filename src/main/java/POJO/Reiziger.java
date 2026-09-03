@@ -1,21 +1,42 @@
 package POJO;
 
-import java.sql.Date;
-import java.time.LocalDate;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
+import java.sql.Date;
+
+@Entity
+@Table(name = "reiziger")
 public class Reiziger {
+
+    @Id
+    @Column(name = "reiziger_id")
     private int id;
+
+    @Column(name = "voorletters")
     private String voorletters;
+
+    @Column(name = "tussenvoegsel")
     private String tussenvoegsel;
+
+    @Column(name = "achternaam")
     private String achternaam;
+
+    @Column(name = "geboortedatum")
     private Date geboortedatum;
 
-    public Reiziger(int id, String voorletters, String tussenvoegsel, String achternaam, LocalDate geboortedatum) {
+    public Reiziger() {
+    }
+
+    public Reiziger(int id, String voorletters, String tussenvoegsel,
+                    String achternaam, Date geboortedatum) {
         this.id = id;
         this.voorletters = voorletters;
         this.tussenvoegsel = tussenvoegsel;
         this.achternaam = achternaam;
-        this.geboortedatum = Date.valueOf(geboortedatum);
+        this.geboortedatum = geboortedatum;
     }
 
     public int getId() {
