@@ -1,6 +1,7 @@
 package main.java.DAO;
 
-import POJO.Reiziger;
+import main.java.POJO.Adres;
+import main.java.POJO.Reiziger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -9,32 +10,93 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ReizigerDAOPsql implements DAO.ReizigerDAO {
+public class ReizigerDAOPsql implements ReizigerDAO {
 
     private Connection conn;
+    private AdresDAO adao;
 
     public ReizigerDAOPsql(Connection conn) {
         this.conn = conn;
     }
 
+    public void setAdresDAO(AdresDAO adao) {
+        this.adao = adao;
+    }
+
     @Override
     public boolean save(Reiziger reiziger) {
-        String query = "INSERT INTO reiziger (reiziger_id, voorletters, tussenvoegsel, achternaam, geboortedatum) " +
-                "VALUES (?, ?, ?, ?, ?)";
 
-        try (PreparedStatement statement = conn.prepareStatement(query)) {
+        if (reiziger == null) {
+            return false;
+        }
 
-            statement.setInt(1, reiziger.getId());
-            statement.setString(2, reiziger.getVoorletters());
-            statement.setString(3, reiziger.getTussenvoegsel());
-            statement.setString(4, reiziger.getAchternaam());
-            statement.setDate(5, reiziger.getGeboortedatum());
+        String query =
+                "INSERT INTO reiziger " +
+                        "(reiziger_id, voorletters, tussenvoegsel, " +
+                        "achternaam, geboortedatum) " +
+                        "VALUES (?, ?, ?, ?, ?)";
 
-            int result = statement.executeUpdate();
+        try (PreparedStatement statement =
+                     conn.prepareStatement(query)) {
 
-            return result > 0;
+            statement.setInt(
+                    1,
+                    reiziger.getId()
+            );
+
+            statement.setString(
+                    2,
+                    reiziger.getVoorletters()
+            );
+
+            statement.setString(
+                    3,
+                    reiziger.getTussenvoegsel()
+            );
+
+            statement.setString(
+                    4,
+                    reiziger.getAchternaam()
+            );
+
+            statement.setDate(
+                    5,
+                    reiziger.getGeboortedatum()
+            );
+
+            int result =
+                    statement.executeUpdate();
+
+            if (result <= 0) {
+                return false;
+            }
+
+            /*
+             * Geen adres?
+             * Dan is de reiziger succesvol opgeslagen
+             * en hoeven we verder niets te doen.
+             */
+            if (reiziger.getAdres() == null) {
+                return true;
+            }
+
+            /*
+             * Wel een adres:
+             * leg de relatie aan beide kanten vast.
+             */
+            reiziger.getAdres()
+                    .setReiziger(reiziger);
+
+            if (adao == null) {
+                return false;
+            }
+
+            return adao.save(
+                    reiziger.getAdres()
+            );
 
         } catch (SQLException e) {
+
             e.printStackTrace();
             return false;
         }
@@ -42,23 +104,96 @@ public class ReizigerDAOPsql implements DAO.ReizigerDAO {
 
     @Override
     public boolean update(Reiziger reiziger) {
-        String query = "UPDATE reiziger " +
-                "SET voorletters = ?, tussenvoegsel = ?, achternaam = ?, geboortedatum = ? " +
-                "WHERE reiziger_id = ?";
 
-        try (PreparedStatement statement = conn.prepareStatement(query)) {
+        if (reiziger == null) {
+            return false;
+        }
 
-            statement.setString(1, reiziger.getVoorletters());
-            statement.setString(2, reiziger.getTussenvoegsel());
-            statement.setString(3, reiziger.getAchternaam());
-            statement.setDate(4, reiziger.getGeboortedatum());
-            statement.setInt(5, reiziger.getId());
+        String query =
+                "UPDATE reiziger " +
+                        "SET voorletters = ?, " +
+                        "tussenvoegsel = ?, " +
+                        "achternaam = ?, " +
+                        "geboortedatum = ? " +
+                        "WHERE reiziger_id = ?";
 
-            int result = statement.executeUpdate();
+        try (PreparedStatement statement =
+                     conn.prepareStatement(query)) {
 
-            return result > 0;
+            statement.setString(
+                    1,
+                    reiziger.getVoorletters()
+            );
+
+            statement.setString(
+                    2,
+                    reiziger.getTussenvoegsel()
+            );
+
+            statement.setString(
+                    3,
+                    reiziger.getAchternaam()
+            );
+
+            statement.setDate(
+                    4,
+                    reiziger.getGeboortedatum()
+            );
+
+            statement.setInt(
+                    5,
+                    reiziger.getId()
+            );
+
+            int result =
+                    statement.executeUpdate();
+
+            if (result <= 0) {
+                return false;
+            }
+
+            /*
+             * Geen adres gekoppeld?
+             * Dan is alleen de reiziger wijzigen voldoende.
+             */
+            if (reiziger.getAdres() == null) {
+                return true;
+            }
+
+            if (adao == null) {
+                return false;
+            }
+
+            /*
+             * Zorg dat het adres naar deze reiziger verwijst.
+             */
+            reiziger.getAdres()
+                    .setReiziger(reiziger);
+
+            Adres bestaandAdres =
+                    adao.findByReiziger(reiziger);
+
+            /*
+             * Adres bestaat al:
+             * update uitvoeren.
+             */
+            if (bestaandAdres != null) {
+
+                return adao.update(
+                        reiziger.getAdres()
+                );
+            }
+
+            /*
+             * Nog geen adres in database:
+             * nieuw adres opslaan.
+             */
+            return adao.save(
+                    reiziger.getAdres()
+            );
 
         } catch (SQLException e) {
+
             e.printStackTrace();
             return false;
         }
@@ -66,17 +201,60 @@ public class ReizigerDAOPsql implements DAO.ReizigerDAO {
 
     @Override
     public boolean delete(Reiziger reiziger) {
-        String query = "DELETE FROM reiziger WHERE reiziger_id = ?";
 
-        try (PreparedStatement statement = conn.prepareStatement(query)) {
+        if (reiziger == null) {
+            return false;
+        }
 
-            statement.setInt(1, reiziger.getId());
+        try {
 
-            int result = statement.executeUpdate();
+            /*
+             * Alleen naar een adres zoeken wanneer
+             * een AdresDAO beschikbaar is.
+             */
+            if (adao != null) {
 
-            return result > 0;
+                Adres adres =
+                        adao.findByReiziger(reiziger);
+
+                /*
+                 * Alleen verwijderen wanneer
+                 * daadwerkelijk een adres bestaat.
+                 */
+                if (adres != null) {
+
+                    boolean adresVerwijderd =
+                            adao.delete(adres);
+
+                    if (!adresVerwijderd) {
+                        return false;
+                    }
+                }
+            }
+
+            /*
+             * Daarna de reiziger verwijderen.
+             */
+            String query =
+                    "DELETE FROM reiziger " +
+                            "WHERE reiziger_id = ?";
+
+            try (PreparedStatement statement =
+                         conn.prepareStatement(query)) {
+
+                statement.setInt(
+                        1,
+                        reiziger.getId()
+                );
+
+                int result =
+                        statement.executeUpdate();
+
+                return result > 0;
+            }
 
         } catch (SQLException e) {
+
             e.printStackTrace();
             return false;
         }
@@ -84,34 +262,63 @@ public class ReizigerDAOPsql implements DAO.ReizigerDAO {
 
     @Override
     public Reiziger findById(int id) {
-        String query = "SELECT reiziger_id, voorletters, tussenvoegsel, achternaam, geboortedatum " +
-                "FROM reiziger WHERE reiziger_id = ?";
 
-        try (PreparedStatement statement = conn.prepareStatement(query)) {
+        String query =
+                "SELECT reiziger_id, voorletters, " +
+                        "tussenvoegsel, achternaam, geboortedatum " +
+                        "FROM reiziger " +
+                        "WHERE reiziger_id = ?";
 
-            statement.setInt(1, id);
+        try (PreparedStatement statement =
+                     conn.prepareStatement(query)) {
 
-            try (ResultSet resultSet = statement.executeQuery()) {
+            statement.setInt(
+                    1,
+                    id
+            );
+
+            try (ResultSet resultSet =
+                         statement.executeQuery()) {
 
                 if (resultSet.next()) {
 
-                    int reizigerId = resultSet.getInt("reiziger_id");
-                    String voorletters = resultSet.getString("voorletters");
-                    String tussenvoegsel = resultSet.getString("tussenvoegsel");
-                    String achternaam = resultSet.getString("achternaam");
-                    java.sql.Date geboortedatum = resultSet.getDate("geboortedatum");
+                    Reiziger reiziger =
+                            new Reiziger(
+                                    resultSet.getInt(
+                                            "reiziger_id"
+                                    ),
+                                    resultSet.getString(
+                                            "voorletters"
+                                    ),
+                                    resultSet.getString(
+                                            "tussenvoegsel"
+                                    ),
+                                    resultSet.getString(
+                                            "achternaam"
+                                    ),
+                                    resultSet.getDate(
+                                            "geboortedatum"
+                                    )
+                            );
 
-                    return new Reiziger(
-                            reizigerId,
-                            voorletters,
-                            tussenvoegsel,
-                            achternaam,
-                            geboortedatum
-                    );
+                    if (adao != null) {
+
+                        Adres adres =
+                                adao.findByReiziger(
+                                        reiziger
+                                );
+
+                        reiziger.setAdres(
+                                adres
+                        );
+                    }
+
+                    return reiziger;
                 }
             }
 
         } catch (SQLException e) {
+
             e.printStackTrace();
         }
 
@@ -119,40 +326,70 @@ public class ReizigerDAOPsql implements DAO.ReizigerDAO {
     }
 
     @Override
-    public List<Reiziger> findByGbdatum(String datum) {
+    public List<Reiziger> findByGbdatum(
+            String datum) {
 
-        List<Reiziger> reizigers = new ArrayList<>();
+        List<Reiziger> reizigers =
+                new ArrayList<>();
 
-        String query = "SELECT reiziger_id, voorletters, tussenvoegsel, achternaam, geboortedatum " +
-                "FROM reiziger WHERE geboortedatum = ?";
+        String query =
+                "SELECT reiziger_id, voorletters, " +
+                        "tussenvoegsel, achternaam, geboortedatum " +
+                        "FROM reiziger " +
+                        "WHERE geboortedatum = ?";
 
-        try (PreparedStatement statement = conn.prepareStatement(query)) {
+        try (PreparedStatement statement =
+                     conn.prepareStatement(query)) {
 
-            statement.setDate(1, java.sql.Date.valueOf(datum));
+            statement.setDate(
+                    1,
+                    java.sql.Date.valueOf(datum)
+            );
 
-            try (ResultSet resultSet = statement.executeQuery()) {
+            try (ResultSet resultSet =
+                         statement.executeQuery()) {
 
                 while (resultSet.next()) {
 
-                    int reizigerId = resultSet.getInt("reiziger_id");
-                    String voorletters = resultSet.getString("voorletters");
-                    String tussenvoegsel = resultSet.getString("tussenvoegsel");
-                    String achternaam = resultSet.getString("achternaam");
-                    java.sql.Date geboortedatum = resultSet.getDate("geboortedatum");
+                    Reiziger reiziger =
+                            new Reiziger(
+                                    resultSet.getInt(
+                                            "reiziger_id"
+                                    ),
+                                    resultSet.getString(
+                                            "voorletters"
+                                    ),
+                                    resultSet.getString(
+                                            "tussenvoegsel"
+                                    ),
+                                    resultSet.getString(
+                                            "achternaam"
+                                    ),
+                                    resultSet.getDate(
+                                            "geboortedatum"
+                                    )
+                            );
+
+                    if (adao != null) {
+
+                        Adres adres =
+                                adao.findByReiziger(
+                                        reiziger
+                                );
+
+                        reiziger.setAdres(
+                                adres
+                        );
+                    }
 
                     reizigers.add(
-                            new Reiziger(
-                                    reizigerId,
-                                    voorletters,
-                                    tussenvoegsel,
-                                    achternaam,
-                                    geboortedatum
-                            )
+                            reiziger
                     );
                 }
             }
 
         } catch (SQLException e) {
+
             e.printStackTrace();
         }
 
@@ -162,34 +399,60 @@ public class ReizigerDAOPsql implements DAO.ReizigerDAO {
     @Override
     public List<Reiziger> findAll() {
 
-        List<Reiziger> reizigers = new ArrayList<>();
+        List<Reiziger> reizigers =
+                new ArrayList<>();
 
-        String query = "SELECT reiziger_id, voorletters, tussenvoegsel, achternaam, geboortedatum " +
-                "FROM reiziger";
+        String query =
+                "SELECT reiziger_id, voorletters, " +
+                        "tussenvoegsel, achternaam, geboortedatum " +
+                        "FROM reiziger";
 
-        try (PreparedStatement statement = conn.prepareStatement(query);
-             ResultSet resultSet = statement.executeQuery()) {
+        try (PreparedStatement statement =
+                     conn.prepareStatement(query);
+
+             ResultSet resultSet =
+                     statement.executeQuery()) {
 
             while (resultSet.next()) {
 
-                int reizigerId = resultSet.getInt("reiziger_id");
-                String voorletters = resultSet.getString("voorletters");
-                String tussenvoegsel = resultSet.getString("tussenvoegsel");
-                String achternaam = resultSet.getString("achternaam");
-                java.sql.Date geboortedatum = resultSet.getDate("geboortedatum");
+                Reiziger reiziger =
+                        new Reiziger(
+                                resultSet.getInt(
+                                        "reiziger_id"
+                                ),
+                                resultSet.getString(
+                                        "voorletters"
+                                ),
+                                resultSet.getString(
+                                        "tussenvoegsel"
+                                ),
+                                resultSet.getString(
+                                        "achternaam"
+                                ),
+                                resultSet.getDate(
+                                        "geboortedatum"
+                                )
+                        );
+
+                if (adao != null) {
+
+                    Adres adres =
+                            adao.findByReiziger(
+                                    reiziger
+                            );
+
+                    reiziger.setAdres(
+                            adres
+                    );
+                }
 
                 reizigers.add(
-                        new Reiziger(
-                                reizigerId,
-                                voorletters,
-                                tussenvoegsel,
-                                achternaam,
-                                geboortedatum
-                        )
+                        reiziger
                 );
             }
 
         } catch (SQLException e) {
+
             e.printStackTrace();
         }
 

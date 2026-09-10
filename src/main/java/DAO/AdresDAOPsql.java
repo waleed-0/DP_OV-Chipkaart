@@ -1,0 +1,379 @@
+package main.java.DAO;
+
+import main.java.POJO.Adres;
+import main.java.POJO.Reiziger;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class AdresDAOPsql implements AdresDAO {
+
+    private Connection conn;
+    private ReizigerDAO rdao;
+
+    public AdresDAOPsql(Connection connection) {
+        this.conn = connection;
+    }
+
+    public void setReizigerDAO(ReizigerDAO rdao) {
+        this.rdao = rdao;
+    }
+
+    @Override
+    public boolean save(Adres adres) throws SQLException {
+
+        if (adres == null) {
+            return false;
+        }
+
+        String query =
+                "INSERT INTO adres " +
+                        "(adres_id, postcode, huisnummer, straat, woonplaats, reiziger_id) " +
+                        "VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement statement =
+                     conn.prepareStatement(query)) {
+
+            statement.setInt(
+                    1,
+                    adres.getAdres_id()
+            );
+
+            statement.setString(
+                    2,
+                    adres.getPostcode()
+            );
+
+            statement.setString(
+                    3,
+                    adres.getHuisnummer()
+            );
+
+            statement.setString(
+                    4,
+                    adres.getStraat()
+            );
+
+            statement.setString(
+                    5,
+                    adres.getWoonplaats()
+            );
+
+            /*
+             * Alleen reiziger_id gebruiken.
+             *
+             * Er wordt hier GEEN reiziger opgeslagen,
+             * gewijzigd of verwijderd.
+             */
+            if (adres.getReiziger() != null) {
+
+                statement.setInt(
+                        6,
+                        adres.getReiziger().getId()
+                );
+
+            } else {
+
+                statement.setNull(
+                        6,
+                        java.sql.Types.INTEGER
+                );
+            }
+
+            int result =
+                    statement.executeUpdate();
+
+            return result > 0;
+        }
+    }
+
+    @Override
+    public boolean update(Adres adres) throws SQLException {
+
+        if (adres == null) {
+            return false;
+        }
+
+        String query =
+                "UPDATE adres " +
+                        "SET postcode = ?, " +
+                        "huisnummer = ?, " +
+                        "straat = ?, " +
+                        "woonplaats = ?, " +
+                        "reiziger_id = ? " +
+                        "WHERE adres_id = ?";
+
+        try (PreparedStatement statement =
+                     conn.prepareStatement(query)) {
+
+            statement.setString(
+                    1,
+                    adres.getPostcode()
+            );
+
+            statement.setString(
+                    2,
+                    adres.getHuisnummer()
+            );
+
+            statement.setString(
+                    3,
+                    adres.getStraat()
+            );
+
+            statement.setString(
+                    4,
+                    adres.getWoonplaats()
+            );
+
+            /*
+             * Alleen reiziger_id gebruiken.
+             *
+             * Er wordt hier GEEN reiziger gewijzigd.
+             */
+            if (adres.getReiziger() != null) {
+
+                statement.setInt(
+                        5,
+                        adres.getReiziger().getId()
+                );
+
+            } else {
+
+                statement.setNull(
+                        5,
+                        java.sql.Types.INTEGER
+                );
+            }
+
+            statement.setInt(
+                    6,
+                    adres.getAdres_id()
+            );
+
+            int result =
+                    statement.executeUpdate();
+
+            return result > 0;
+        }
+    }
+
+    @Override
+    public boolean delete(Adres adres) throws SQLException {
+
+        if (adres == null) {
+            return false;
+        }
+
+        /*
+         * Alleen het adres verwijderen.
+         *
+         * De Reiziger wordt NIET verwijderd.
+         */
+        String query =
+                "DELETE FROM adres " +
+                        "WHERE adres_id = ?";
+
+        try (PreparedStatement statement =
+                     conn.prepareStatement(query)) {
+
+            statement.setInt(
+                    1,
+                    adres.getAdres_id()
+            );
+
+            int result =
+                    statement.executeUpdate();
+
+            return result > 0;
+        }
+    }
+
+    @Override
+    public Adres findByReiziger(Reiziger reiziger)
+            throws SQLException {
+
+        if (reiziger == null) {
+            return null;
+        }
+
+        Adres adres = null;
+
+        String query =
+                "SELECT adres_id, postcode, huisnummer, straat, " +
+                        "woonplaats, reiziger_id " +
+                        "FROM adres " +
+                        "WHERE reiziger_id = ?";
+
+        try (PreparedStatement statement =
+                     conn.prepareStatement(query)) {
+
+            statement.setInt(
+                    1,
+                    reiziger.getId()
+            );
+
+            try (ResultSet resultSet =
+                         statement.executeQuery()) {
+
+                if (resultSet.next()) {
+
+                    int adresId =
+                            resultSet.getInt(
+                                    "adres_id"
+                            );
+
+                    String postcode =
+                            resultSet.getString(
+                                    "postcode"
+                            );
+
+                    String huisnummer =
+                            resultSet.getString(
+                                    "huisnummer"
+                            );
+
+                    String straat =
+                            resultSet.getString(
+                                    "straat"
+                            );
+
+                    String woonplaats =
+                            resultSet.getString(
+                                    "woonplaats"
+                            );
+
+                    adres =
+                            new Adres(
+                                    adresId,
+                                    postcode,
+                                    huisnummer,
+                                    straat,
+                                    woonplaats,
+                                    reiziger
+                            );
+
+                    /*
+                     * Relatie ook vanaf Reiziger
+                     * naar Adres vastleggen.
+                     */
+                    reiziger.setAdres(
+                            adres
+                    );
+                }
+            }
+        }
+
+        /*
+         * Pas na het sluiten van ResultSet en
+         * PreparedStatement wordt het Adres geretourneerd.
+         */
+        return adres;
+    }
+
+    @Override
+    public List<Adres> findAll()
+            throws SQLException {
+
+        List<Adres> adressen =
+                new ArrayList<>();
+
+        /*
+         * Zonder ReizigerDAO kunnen we geen complete
+         * Adres-objecten met Reiziger maken.
+         */
+        if (rdao == null) {
+            throw new IllegalStateException(
+                    "ReizigerDAO is niet gekoppeld aan AdresDAOPsql."
+            );
+        }
+
+        String query =
+                "SELECT adres_id, postcode, huisnummer, " +
+                        "straat, woonplaats, reiziger_id " +
+                        "FROM adres";
+
+        try (PreparedStatement statement =
+                     conn.prepareStatement(query);
+
+             ResultSet resultSet =
+                     statement.executeQuery()) {
+
+            while (resultSet.next()) {
+
+                int adresId =
+                        resultSet.getInt(
+                                "adres_id"
+                        );
+
+                String postcode =
+                        resultSet.getString(
+                                "postcode"
+                        );
+
+                String huisnummer =
+                        resultSet.getString(
+                                "huisnummer"
+                        );
+
+                String straat =
+                        resultSet.getString(
+                                "straat"
+                        );
+
+                String woonplaats =
+                        resultSet.getString(
+                                "woonplaats"
+                        );
+
+                int reizigerId =
+                        resultSet.getInt(
+                                "reiziger_id"
+                        );
+
+                /*
+                 * Bij iedere rij de bijbehorende
+                 * Reiziger ophalen via ReizigerDAO.
+                 */
+                Reiziger reiziger =
+                        rdao.findById(
+                                reizigerId
+                        );
+
+                /*
+                 * Adres maken met de bijbehorende Reiziger.
+                 */
+                Adres adres =
+                        new Adres(
+                                adresId,
+                                postcode,
+                                huisnummer,
+                                straat,
+                                woonplaats,
+                                reiziger
+                        );
+
+                /*
+                 * De relatie ook vanaf Reiziger
+                 * naar hetzelfde Adres-object leggen.
+                 */
+                if (reiziger != null) {
+
+                    reiziger.setAdres(
+                            adres
+                    );
+                }
+
+                adressen.add(
+                        adres
+                );
+            }
+        }
+
+        return adressen;
+    }
+}
