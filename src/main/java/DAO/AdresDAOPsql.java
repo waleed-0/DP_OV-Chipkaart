@@ -193,6 +193,9 @@ public class AdresDAOPsql implements AdresDAO {
         }
     }
 
+
+
+
     @Override
     public Adres findByReiziger(Reiziger reiziger)
             throws SQLException {
@@ -375,5 +378,94 @@ public class AdresDAOPsql implements AdresDAO {
         }
 
         return adressen;
+    }
+
+
+    @Override
+    public Adres findById(int id)
+            throws SQLException {
+
+        Adres adres = null;
+
+        String query =
+                "SELECT adres_id, postcode, huisnummer, straat, " +
+                        "woonplaats, reiziger_id " +
+                        "FROM adres " +
+                        "WHERE adres_id = ?";
+
+        try (PreparedStatement statement =
+                     conn.prepareStatement(query)) {
+
+            statement.setInt(
+                    1,
+                    id
+            );
+
+            try (ResultSet resultSet =
+                         statement.executeQuery()) {
+
+                if (resultSet.next()) {
+
+                    int adresId =
+                            resultSet.getInt(
+                                    "adres_id"
+                            );
+
+                    String postcode =
+                            resultSet.getString(
+                                    "postcode"
+                            );
+
+                    String huisnummer =
+                            resultSet.getString(
+                                    "huisnummer"
+                            );
+
+                    String straat =
+                            resultSet.getString(
+                                    "straat"
+                            );
+
+                    String woonplaats =
+                            resultSet.getString(
+                                    "woonplaats"
+                            );
+
+                    int reizigerId =
+                            resultSet.getInt(
+                                    "reiziger_id"
+                            );
+
+                    Reiziger reiziger = null;
+
+                    if (!resultSet.wasNull() &&
+                            rdao != null) {
+
+                        reiziger =
+                                rdao.findById(
+                                        reizigerId
+                                );
+                    }
+
+                    adres =
+                            new Adres(
+                                    adresId,
+                                    postcode,
+                                    huisnummer,
+                                    straat,
+                                    woonplaats,
+                                    reiziger
+                            );
+
+                    if (reiziger != null) {
+                        reiziger.setAdres(
+                                adres
+                        );
+                    }
+                }
+            }
+        }
+
+        return adres;
     }
 }

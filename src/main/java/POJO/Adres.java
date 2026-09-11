@@ -1,13 +1,56 @@
 package main.java.POJO;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "adres")
 public class Adres {
 
+    @Id
+    @Column(name = "adres_id")
     private int adres_id;
+
+    @Column(name = "postcode", nullable = false)
     private String postcode;
+
+    @Column(name = "huisnummer", nullable = false)
     private String huisnummer;
+
+    @Column(name = "straat", nullable = false)
     private String straat;
+
+    @Column(name = "woonplaats", nullable = false)
     private String woonplaats;
+
+    @OneToOne
+    @JoinColumn(
+            name = "reiziger_id",
+            unique = true,
+            nullable = false
+    )
     private Reiziger reiziger;
+
+    public Adres() {
+    }
+
+    public Adres(
+            int adres_id,
+            String postcode,
+            String huisnummer,
+            String straat,
+            String woonplaats) {
+
+        this.adres_id = adres_id;
+        this.postcode = postcode;
+        this.huisnummer = huisnummer;
+        this.straat = straat;
+        this.woonplaats = woonplaats;
+    }
 
     public Adres(
             int adres_id,
@@ -23,20 +66,6 @@ public class Adres {
         this.straat = straat;
         this.woonplaats = woonplaats;
         this.reiziger = reiziger;
-    }
-
-    public Adres(
-            int adres_id,
-            String postcode,
-            String huisnummer,
-            String straat,
-            String woonplaats) {
-
-        this.adres_id = adres_id;
-        this.postcode = postcode;
-        this.huisnummer = huisnummer;
-        this.straat = straat;
-        this.woonplaats = woonplaats;
     }
 
     public int getId() {
@@ -95,10 +124,6 @@ public class Adres {
         this.reiziger = reiziger;
     }
 
-    public void setReiziger_id(Reiziger reiziger) {
-        this.reiziger = reiziger;
-    }
-
     @Override
     public String toString() {
 
@@ -106,30 +131,35 @@ public class Adres {
 
         if (reiziger != null) {
 
-            String naam = reiziger.getVoorletters();
+            String naam =
+                    reiziger.getVoorletters();
 
             if (reiziger.getTussenvoegsel() != null &&
                     !reiziger.getTussenvoegsel().isEmpty()) {
 
-                naam += " " + reiziger.getTussenvoegsel();
+                naam +=
+                        " " +
+                                reiziger.getTussenvoegsel();
             }
 
-            naam += " " + reiziger.getAchternaam();
+            naam +=
+                    " " +
+                            reiziger.getAchternaam();
 
             reizigerInfo =
-                    ", Reiziger {" +
-                            "#" + reiziger.getId() +
-                            " " + naam +
-                            ", geb. " + reiziger.getGeboortedatum() +
+                    ", Reiziger {#" +
+                            reiziger.getId() +
+                            " " +
+                            naam +
                             "}";
         }
 
-        return "Adres {" +
-                "#" + adres_id +
-                ", postcode='" + postcode + '\'' +
-                ", huisnummer='" + huisnummer + '\'' +
-                ", straat='" + straat + '\'' +
-                ", woonplaats='" + woonplaats + '\'' +
+        return "Adres {#" +
+                adres_id +
+                " " +
+                postcode +
+                "-" +
+                huisnummer +
                 reizigerInfo +
                 "}";
     }

@@ -71,19 +71,10 @@ public class ReizigerDAOPsql implements ReizigerDAO {
                 return false;
             }
 
-            /*
-             * Geen adres?
-             * Dan is de reiziger succesvol opgeslagen
-             * en hoeven we verder niets te doen.
-             */
             if (reiziger.getAdres() == null) {
                 return true;
             }
 
-            /*
-             * Wel een adres:
-             * leg de relatie aan beide kanten vast.
-             */
             reiziger.getAdres()
                     .setReiziger(reiziger);
 
@@ -152,10 +143,6 @@ public class ReizigerDAOPsql implements ReizigerDAO {
                 return false;
             }
 
-            /*
-             * Geen adres gekoppeld?
-             * Dan is alleen de reiziger wijzigen voldoende.
-             */
             if (reiziger.getAdres() == null) {
                 return true;
             }
@@ -164,19 +151,12 @@ public class ReizigerDAOPsql implements ReizigerDAO {
                 return false;
             }
 
-            /*
-             * Zorg dat het adres naar deze reiziger verwijst.
-             */
             reiziger.getAdres()
                     .setReiziger(reiziger);
 
             Adres bestaandAdres =
                     adao.findByReiziger(reiziger);
 
-            /*
-             * Adres bestaat al:
-             * update uitvoeren.
-             */
             if (bestaandAdres != null) {
 
                 return adao.update(
@@ -184,10 +164,6 @@ public class ReizigerDAOPsql implements ReizigerDAO {
                 );
             }
 
-            /*
-             * Nog geen adres in database:
-             * nieuw adres opslaan.
-             */
             return adao.save(
                     reiziger.getAdres()
             );
@@ -208,19 +184,12 @@ public class ReizigerDAOPsql implements ReizigerDAO {
 
         try {
 
-            /*
-             * Alleen naar een adres zoeken wanneer
-             * een AdresDAO beschikbaar is.
-             */
+
             if (adao != null) {
 
                 Adres adres =
                         adao.findByReiziger(reiziger);
 
-                /*
-                 * Alleen verwijderen wanneer
-                 * daadwerkelijk een adres bestaat.
-                 */
                 if (adres != null) {
 
                     boolean adresVerwijderd =
@@ -232,9 +201,6 @@ public class ReizigerDAOPsql implements ReizigerDAO {
                 }
             }
 
-            /*
-             * Daarna de reiziger verwijderen.
-             */
             String query =
                     "DELETE FROM reiziger " +
                             "WHERE reiziger_id = ?";
